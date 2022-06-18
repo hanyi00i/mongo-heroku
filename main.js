@@ -688,9 +688,9 @@ app.post('/register', async (req, res) => {
  *                  type: string
  *                phone:
  *                  type: string
- *                date:
- *                  type: integer
  *                checkin:
+ *                  type: integer
+ *                date:
  *                  type: integer
  *      responses:
  *        200:  
