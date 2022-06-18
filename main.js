@@ -156,12 +156,12 @@ app.use(express.urlencoded({ extended: false }))
 			})
 		})
 		} else {
-			console.log("Login Failed");
+			console.log("Not authorized with admin role");
 			res.status(401).json( {error : "Not authorized with admin role"} );
 		}
 	} else {
-		console.log("Login Failed");
-		res.status(401).json( {error : "Login Failed"} );
+		console.log("Admin Login Failed");
+		res.status(401).json( {error : "Admin Login Failed"} );
 	}
 })
 
@@ -211,12 +211,12 @@ app.post('/userlogin',async (req, res) => {
 			})
 		})
 		} else {
-			console.log("Login Failed");
+			console.log("Not authorized with user role");
 			res.status(401).json( {error : "Not authorized with user role"} );
 		}
 	} else {
-		console.log("Login Failed");
-		res.status(401).json( {error : "Login Failed"} );
+		console.log("User Login Failed");
+		res.status(401).json( {error : "User Login Failed"} );
 	}
 })
 
@@ -266,12 +266,12 @@ app.post('/userlogin',async (req, res) => {
 			})
 		})
 		} else {
-			console.log("Login Failed");
+			console.log("Not authorized with security role");
 			res.status(401).json( {error : "Not authorized with security role"} );
 		}
 	} else {
-		console.log("Login Failed");
-		res.status(401).json( {error : "Login Failed"} );
+		console.log("Security Login Failed");
+		res.status(401).json( {error : "Security Login Failed"} );
 	}
 })
 
@@ -304,10 +304,10 @@ app.post('/userlogin',async (req, res) => {
 	const {id} = req.params;
 	const visitor = await Visitor.getVisitor(id);
 	if (visitor != null ) {
-		console.log("Get Successfully");
+		console.log("Get Visitor info Successfully");
 		res.status(200).json({visitor})
 	} else {
-		console.log("Get Failed");
+		console.log("Failed to get visitor");
 		res.status(404).send("Failed to get visitor");
 	}
 })
