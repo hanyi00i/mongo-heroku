@@ -16,7 +16,7 @@ class Visitor {
         }
 	}
 
-	static async createVisitor(name, id, phone, inputby, date, checkin, inputby) {
+	static async createVisitor(name, id, phone, inputby, date, checkin) {
 		let visitor = await visitors.findOne({ "id": id });
 		if (visitor) {
 			return null;
