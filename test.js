@@ -61,11 +61,11 @@ console.log('Connected to MongoDB\n');
 
 //Insert
 // console.time('insert used time')
-// let result = await client.db('vms').collection('details').insertOne({
-//     id :"000306-05-0565",
-//     checkin:"1200",
-//     checkout:"0",
-//     day:"monday",
+// let result = await client.db('vms').collection('departments').insertOne({
+//     code :"001",
+//     department:"1200",
+//     place: "A01",
+//     visitors: []
 // })
 // console.timeEnd('insert used time')
 // console.log('Inserted document', result)
@@ -103,13 +103,13 @@ console.log('Connected to MongoDB\n');
 // console.log('completed DELETE\n')
 
 console.time('insert used time')
-let result2 = await client.db('vms').collection('visitors').aggregate([
-    {$match:{id:"000306-05-0565"}},
+let result2 = await client.db('vms').collection('departments').aggregate([
+    //{$match:{code:"001"}},
     {$lookup:{
-        from:"details",
-        localField:"details",
-        foreignField:"day",
-        as:"details"
+        from:"visitors",
+        localField:"visitors",
+        foreignField:"id",
+        as: "visitors"
     }}
 ]).toArray()
 console.timeEnd('insert used time')

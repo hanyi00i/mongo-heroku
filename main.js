@@ -1,6 +1,7 @@
 const MongoClient = require("mongodb").MongoClient;
 const User = require("./user");
 const Visitor = require("./visitor");
+const Departmental = require("./department");
 
 MongoClient.connect(
 	// TODO: Connection 
@@ -13,6 +14,7 @@ MongoClient.connect(
 	console.log('Connected to MongoDB');
 	User.injectDB(client);
 	Visitor.injectDB(client);
+	Department.injectDB(client);
 })
 
 const express = require('express')
@@ -85,8 +87,25 @@ app.use(express.urlencoded({ extended: false }))
  *         phone: 
  *           type: string
  *         date: 
- *           type: string
+ *           type: integer
+ *         checkin: 
+ *           type: integer
+ *         checkout:
+ *           type: integer
  *         inputby:
+ *           type: string
+ *     Department:
+ *       type: object
+ *       properties:
+ *         _id: 
+ *           type: string
+ *         code: 
+ *           type: string
+ *         department: 
+ *           type: string
+ *         floor: 
+ *           type: string
+ *         visitors: 
  *           type: string
  */
 
@@ -519,6 +538,136 @@ app.post('/register', async (req, res) => {
 
 /**
  * @swagger
+ * /department/create:
+ *   post:
+ *      security: 
+ *          - BearerAuth: []
+ *      summary: Create Depertment Details by Admin
+ *      tags: [Admin Interface]
+ *      description: Only Admin can create department details
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema: 
+ *              type: object
+ *              properties:
+ *                code: 
+ *                  type: string
+ *                department: 
+ *                  type: string
+ *                floor:
+ *                  type: string
+ *      responses:
+ *        200:  
+ *          description: Department Created Successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Department'
+ *        401:
+ *          description: Invalid Department Code
+ */
+ app.post('/department/create', async (req, res) => {
+	console.log("Request Body : ", req.body);
+	if (req.user.role == "admin") {
+	const depart = await Departmental.createdepartment(req.body.code, req.body.department, req.body.floor);
+	if (depart != null ) {
+		console.log("Register Successfully");
+		res.status(200).json({
+			_id: depart._id,
+			code: depart.code,
+			department: depart.department,
+			floor: depart.floor
+		})
+	} else {
+		console.log("Create Department Failed");
+		res.status(401).json( {error : "Create Department Failed"} );
+	}
+	} else {
+		console.log("Not authorized with admin role");
+		res.status(401).json( {error : "Not authorized with admin role"} );
+	}
+})
+
+/**
+ * @swagger
+ * /department/delete:
+ *   delete:
+ *      security: 
+ *          - BearerAuth: []
+ *      summary: Delete Department by Admin
+ *      tags: [Admin Interface]
+ *      description: Only Admin can delete department
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema: 
+ *              type: object
+ *              properties:
+ *                code: 
+ *                  type: string
+ *      responses:
+ *        200:  
+ *          description: Department Deleted Successfully
+ *        401:
+ *          description: Invalid Department Code
+ */
+ app.delete('/department/delete', async (req, res) => {
+	console.log("Request Body : ", req.body);
+	if (req.user.role == "admin") {
+	const depart = await Department.deletedepartment(req.body.code);
+	if (depart != null ) {
+		console.log("Delete Successfully");
+		res.status(200).json({ delete : "success"})
+	} else {
+		console.log("Delete Failed");
+		res.status(401).json( {error : "Delete Failed"} );
+	}
+	} else {
+		console.log("Delete Failed");
+		res.status(401).json( {error : "Not authorized with admin role"} );
+	}
+})
+
+/**
+ * @swagger
+ * /department/get:
+ *   get:
+ *     security:
+ *         - BearerAuth: []
+ *     summary: Get All the Departments Information 
+ *     tags: [Admin Interface]
+ *     description: Only Admin can get all the departments information
+ *     responses:
+ *       200:
+ *         description: Get Departments Details Successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Department'
+ *       400:
+ *         description: Not authorized with Admin role
+ */
+ app.get('/department/get', async (req, res) => {
+	if (req.user.role == "admin") {
+	const admin = await Department.getdepartment();
+	if (admin != null ) {
+		console.log("Get Successfully with", admin);
+		res.status(200).json({admin})
+	} else {
+		console.log("Get Departments Details Failed");
+		res.status(404).send("Get Departments Details Failed");
+	}
+	} else {
+		console.log("Not authorizaed with Admin role");
+		res.status(401).json( {error : "Not authorizaed with Admin role"} );
+	}
+})
+
+/**
+ * @swagger
  * /visitor/create:
  *   post:
  *      security: 
@@ -540,7 +689,9 @@ app.post('/register', async (req, res) => {
  *                phone:
  *                  type: string
  *                date:
- *                  type: string
+ *                  type: integer
+ *                checkin:
+ *                  type: integer
  *      responses:
  *        200:  
  *          description: Create Visitor Successfully
@@ -554,16 +705,17 @@ app.post('/register', async (req, res) => {
  app.post('/visitor/create', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
-	const visitor = await Visitor.createVisitor(req.body.name, req.body.id, req.body.phone, req.body.date, req.user.username);
+	const visitor = await Visitor.createVisitor(req.body.name, req.body.id, req.body.phone, req.body.date, req.body.checkin, req.user.username);
 	if (visitor != null ) {
 		console.log("Create Successfully");
-		console.log("What is send to test : " + visitor._id, visitor.name, visitor.id, visitor.phone, visitor.date, visitor.inputby);
+		console.log("What is send to test : " + visitor._id, visitor.name, visitor.id, visitor.phone, visitor.date, visitor.checkin, visitor.inputby);
 		res.status(200).json({
 			_id: visitor._id,
 			name: visitor.name,
 			id: visitor.id,
 			phone: visitor.phone,
 			date: visitor.date,
+			checkin: visitor.checkin,
 			inputby: visitor.inputby
 		})
 	} else {
@@ -631,8 +783,8 @@ app.post('/register', async (req, res) => {
  *              properties:
  *                id: 
  *                  type: string
- *                phone:
- *                  type: string
+ *                checkout:
+ *                  type: integer
  *      responses:
  *        200:  
  *          description: Update Visitor Successfully
@@ -646,16 +798,18 @@ app.post('/register', async (req, res) => {
  app.patch('/visitor/update', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
-	const visitor = await Visitor.updateVisitor(req.body.id, req.body.phone, req.user.username);
+	const visitor = await Visitor.updateVisitor(req.body.id, req.body.checkout, req.user.username);
 	if (visitor != null ) {
 		console.log("Update Successfully");
-		console.log("What is send to test : " + visitor._id, visitor.phone);
+		console.log("What is send to test : " + visitor._id, visitor.checkout);
 		res.status(200).json({
 			_id: visitor._id,
 			name: visitor.name,
 			id: visitor.id,
 			phone: visitor.phone,
 			date: visitor.date,
+			checkin: visitor.checkin,
+			checkout: visitor.checkout,
 			inputby: visitor.inputby
 		})
 	} else {
@@ -708,6 +862,112 @@ app.post('/register', async (req, res) => {
 
 /**
  * @swagger
+ * /department/insert:
+ *   patch:
+ *      security: 
+ *          - BearerAuth: []
+ *      summary: Insert visitor id in Department by User
+ *      tags: [User Interface]
+ *      description: Only User can insert visitor id in Department
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema: 
+ *              type: object
+ *              properties:
+ *                code: 
+ *                  type: string
+ *                visitors:
+ *                  type: string
+ *      responses:
+ *        200:  
+ *          description: Update Successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Department'
+ *        401:
+ *          description: Invalid username
+ */
+ app.patch('/department/insert', async (req, res) => {
+	console.log("Request Body : ", req.body);
+	if (req.user.role == "user") {
+	const user = await Department.updatedepartmentid(req.body.code, req.body.visitors);
+	if (user != null ) {
+		console.log("Register Successfully");
+		res.status(200).json({
+			_id: user._id,
+			code: user.code,
+			departmet: user.department,
+			floor: user.floor,
+			visitors: user.visitors
+		})
+	} else {
+		console.log("Insert visitor id Failed");
+		res.status(401).json( {error : "Insert visitor id Failed"} );
+	}
+	} else {
+		console.log("Not authorized with admin role");
+		res.status(401).json( {error : "Not authorized with admin role"} );
+	}
+})
+
+/**
+ * @swagger
+ * /department/remove:
+ *   patch:
+ *      security: 
+ *          - BearerAuth: []
+ *      summary: Remove visitor id in Department by User
+ *      tags: [User Interface]
+ *      description: Only User can remove visitor id in Department
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema: 
+ *              type: object
+ *              properties:
+ *                code: 
+ *                  type: string
+ *                visitors:
+ *                  type: string
+ *      responses:
+ *        200:  
+ *          description: Update Successfully
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Department'
+ *        401:
+ *          description: Invalid username
+ */
+ app.patch('/department/remove', async (req, res) => {
+	console.log("Request Body : ", req.body);
+	if (req.user.role == "user") {
+	const user = await Department.deletedepartmentid(req.body.code, req.body.visitors);
+	if (user != null ) {
+		console.log("Register Successfully");
+		res.status(200).json({
+			_id: user._id,
+			code: user.code,
+			departmet: user.department,
+			floor: user.floor,
+			visitors: user.visitors
+		})
+	} else {
+		console.log("Remove visitor id Failed");
+		res.status(401).json( {error : "Remove visitor id Failed"} );
+	}
+	} else {
+		console.log("Not authorized with admin role");
+		res.status(401).json( {error : "Not authorized with admin role"} );
+	}
+})
+
+/**
+ * @swagger
  * /security:
  *   get:
  *     security:
@@ -749,6 +1009,7 @@ app.listen(port, () => {
 
 // JSON Web Token
 const jwt = require('jsonwebtoken');
+const Department = require("./department");
 function generateAccessToken(payload) {
 	return jwt.sign(payload, "my-super-secret", { expiresIn: '1d' }); //expiresIn: '60s'
 }

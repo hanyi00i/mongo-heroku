@@ -16,20 +16,20 @@ class Visitor {
         }
 	}
 
-	static async createVisitor(name, id, phone, date, inputby) {
+	static async createVisitor(name, id, phone, date, checkin, inputby) {
 		let visitor = await visitors.findOne({ "id": id });
 		if (visitor) {
 			return null;
 		} else {
-			await visitors.insertOne({ "name": name, "id": id, "phone": phone, "date": date, "inputby": inputby });
+			await visitors.insertOne({ "name": name, "id": id, "phone": phone, "date": date, "checkin": checkin, "inputby": inputby });
 		}
 		return visitor = await visitors.findOne({ "id": id });
 	}
 
-	static async updateVisitor(id, phone, inputby) {
+	static async updateVisitor(id, checkout, inputby) {
 		let visitor = await visitors.findOne({ "id": id });
 		if (visitor.inputby == inputby) {
-			await visitors.updateOne({"id": id }, { $set: { "phone": phone } });
+			await visitors.updateOne({"id": id }, { $set: { "checkout": checkout } });
 			return visitor = await visitors.findOne({ "id": id });
 		} else {
 			return null;
@@ -58,7 +58,6 @@ class Visitor {
 
 	static async getAllVisitors() {
         let visitor = await visitors.find({ }).toArray();
-		console.log("this is what i get", visitor);
         if(visitor){
             return visitor;
         }
