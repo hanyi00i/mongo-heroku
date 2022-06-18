@@ -16,12 +16,12 @@ class Visitor {
         }
 	}
 
-	static async createVisitor(name, id, phone, date, checkin, inputby) {
+	static async createVisitor(name, id, phone, inputby, date, checkin, inputby) {
 		let visitor = await visitors.findOne({ "id": id });
 		if (visitor) {
 			return null;
 		} else {
-			await visitors.insertOne({ "name": name, "id": id, "phone": phone, "date": date, "checkin": checkin, "inputby": inputby });
+			await visitors.insertOne({ "name": name, "id": id, "phone": phone, "inputby": inputby, "date": date, "checkin": checkin});
 		}
 		return visitor = await visitors.findOne({ "id": id });
 	}

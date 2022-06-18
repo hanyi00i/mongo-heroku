@@ -705,18 +705,18 @@ app.post('/register', async (req, res) => {
  app.post('/visitor/create', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
-	const visitor = await Visitor.createVisitor(req.body.name, req.body.id, req.body.phone, req.body.date, req.body.checkin, req.user.username);
+	const visitor = await Visitor.createVisitor(req.body.name, req.body.id, req.body.phone, req.user.username, req.body.date, req.body.checkin);
 	if (visitor != null ) {
 		console.log("Create Successfully");
-		console.log("What is send to test : " + visitor._id, visitor.name, visitor.id, visitor.phone, visitor.date, visitor.checkin, visitor.inputby);
+		console.log("What is send to test : " + visitor._id, visitor.name, visitor.id, visitor.phone, visitor.inputby, visitor.date, visitor.checkin);
 		res.status(200).json({
 			_id: visitor._id,
 			name: visitor.name,
 			id: visitor.id,
 			phone: visitor.phone,
+			inputby: visitor.inputby,
 			date: visitor.date,
-			checkin: visitor.checkin,
-			inputby: visitor.inputby
+			checkin: visitor.checkin
 		})
 	} else {
 		console.log("Register Failed");
