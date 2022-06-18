@@ -86,14 +86,14 @@ app.use(express.urlencoded({ extended: false }))
  *           type: string
  *         phone: 
  *           type: string
+ *         inputby:
+ *           type: string
  *         date: 
  *           type: integer
  *         checkin: 
  *           type: integer
  *         checkout:
  *           type: integer
- *         inputby:
- *           type: string
  *     Department:
  *       type: object
  *       properties:
@@ -807,10 +807,10 @@ app.post('/register', async (req, res) => {
 			name: visitor.name,
 			id: visitor.id,
 			phone: visitor.phone,
+			inputby: visitor.inputby,
 			date: visitor.date,
 			checkin: visitor.checkin,
 			checkout: visitor.checkout,
-			inputby: visitor.inputby
 		})
 	} else {
 		console.log("Update Failed");
@@ -985,7 +985,7 @@ app.post('/register', async (req, res) => {
  *       400:
  *         description: Not authorizaed with Admin role
  */
- app.get('/get', async (req, res) => {
+ app.get('/security', async (req, res) => {
 	if (req.user.role == "security") {
 	const visitor = await Visitor.getAllVisitors();
 	if (visitor != null ) {
