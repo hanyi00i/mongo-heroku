@@ -260,7 +260,6 @@ app.post('/userlogin',async (req, res) => {
  app.post('/securitylogin',async (req, res) => {
 	console.log("Request Body : ", req.body);
 	const security = await User.login(req.body.username, req.body.password);
-	console.log(security)
 	if (security != null) {
 		if (security.role == "security") {
 		console.log("What is send to test : " + security._id, security.username, security.email);
@@ -313,6 +312,7 @@ app.post('/userlogin',async (req, res) => {
  app.get('/visitors/:id', async (req, res) => {
 	const {id} = req.params;
 	const visitor = await Visitor.getVisitor(id);
+	console.log("this is the visitor", visitor);
 	if (visitor != null ) {
 		console.log("Get Visitor info Successfully");
 		res.status(200).json({visitor})
@@ -1068,6 +1068,41 @@ app.post('/register', async (req, res) => {
 	} else {
 		console.log("Visitor Not Found");
 		res.status(404).send("Visitor Not Found");
+	}
+	} else {
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
+	}
+})
+
+/**
+ * @swagger
+ * /dataanalytics:
+ *   get:
+ *     security:
+ *         - BearerAuth: []
+ *     summary: Data analytics that can be generated from the database through the RESTful API
+ *     tags: [Data Analytics for Admin Only]
+ *     description: Data analytics of the department that will have visitors before 11:00 AM
+ *     responses:
+ *       200:
+ *         description: The department that will have visitors before 11:00 AM
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Data Not Found
+ */
+ app.get('/dataanalytics', async (req, res) => {
+	if (req.user.role == "admin") {
+	const data = await Departmental.data();
+	if (data != null ) {
+		console.log("Get Successfully with", data);
+		res.status(200).json({data})
+	} else {
+		console.log("Data not found");
+		res.status(404).send("Data not found");
 	}
 	} else {
 		console.log("Forbidden");

@@ -62,6 +62,25 @@ class Departmental {
 			return null;
 		}
 	}
-}
 
+	static async data() {
+        let depart = await departments.find({ }).toArray();
+        if (depart) {
+            return departments.aggregate([
+                {$lookup:{
+                    from:"visitors",
+                    localField:"visitors",
+                    foreignField:"id",
+                    as: "visitors"
+                }},
+				{$match:{
+					visitors: { $elemMatch: { checkin:{ $lte: 1100 } } }
+				  }}
+            ]).toArray();
+        } else {
+            return null
+        }
+	}
+
+}
 module.exports = Departmental;
