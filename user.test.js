@@ -1,7 +1,7 @@
 const MongoClient = require("mongodb").MongoClient;
 const User = require("./user")
 
-describe("Visitor Info Management", () => {
+describe("User Info Management", () => {
 	let client;
 	beforeAll(async () => {
 		client = await MongoClient.connect(
@@ -68,7 +68,7 @@ describe("Visitor Info Management", () => {
 
 	test("Get all users", async () => {
 		const res = await User.getAllUsers();
-		expect(res.length).toBe(5);
+		expect(res.length).toBe(7);
 	})
 
 });

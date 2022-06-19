@@ -74,11 +74,11 @@ describe("Visitor Info Management", () => {
 
 	test("Get visitors by user", async () => {
 		const res = await Visitor.UsergetVisitors("ooi");
-		expect(res.length).toBe(3);
+		expect(res.length).toBe(4);
 	})
 
 	test("Get all visitors", async () => {
 		const res = await Visitor.getAllVisitors();
-		expect(res.length).toBe(6);
+		expect(res.length).toBe(7);
 	})
 }); 

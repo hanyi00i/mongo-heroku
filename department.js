@@ -55,7 +55,6 @@ class Departmental {
     static async deletedepartmentid(code, visitors) {
 		let depart = await departments.findOne({ "code": code });
 		if (depart) {
-            console.log("the things that is pulling", visitors);
 			await departments.updateOne({"code": code }, { $pull: { "visitors": visitors } });
 			return depart = await departments.findOne({ "code": code });
 		} else {
