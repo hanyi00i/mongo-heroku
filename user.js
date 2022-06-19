@@ -63,7 +63,7 @@ class User {
 		}
 	}
 
-	static async getAllVisitors() {
+	static async getAllUsers() {
         let user = await users.find({ }).toArray();
         if(user){
             return user;

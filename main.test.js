@@ -2,20 +2,11 @@ const supertest = require('supertest');
 const request = supertest('http://localhost:3000');
 
 describe('Express Route Test', function () {
-	// it('should return hello world', async () => {
-	// 	return request
-	// 		.get('/hello')
-	// 		.expect(200)
-	// 		.expect('Content-Type', /text/)
-	// 		.then(res => {
-	// 			expect(res.text).toBe('Hello BENR2423');
-	// 		});
-	// })
 
 	it('login successfully', async () => {
 		return request
 			.post('/login')
-			.send({username: 'tony', password: "123abc" })
+			.send({username: 'admin', password: "123abc" })
 			.expect('Content-Type', /json/)
 			.expect(200)
 			.then(res => {
@@ -23,7 +14,7 @@ describe('Express Route Test', function () {
 					_id: expect.any(String),
 					name: expect.stringMatching("tony"),
 					email: expect.stringMatching("tony@gmail.com"),
-					//age: expect.any(Number),
+					role: expect.stringMatching("admin"),
 					})
 			});
 	});

@@ -14,7 +14,7 @@ MongoClient.connect(
 	console.log('Connected to MongoDB');
 	User.injectDB(client);
 	Visitor.injectDB(client);
-	Department.injectDB(client);
+	Departmental.injectDB(client);
 })
 
 const express = require('express')
@@ -57,6 +57,10 @@ const swaggerSpec = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+
+app.get('/', (req, res) => {
+	res.send('Remember to add the endpoint of "/api-docs" to the URL')
+})
 
 /**
  * @swagger
@@ -109,7 +113,6 @@ app.use(express.urlencoded({ extended: false }))
  *           type: string
  */
 
-
 /**
  * @swagger
  * /adminlogin:
@@ -136,7 +139,9 @@ app.use(express.urlencoded({ extended: false }))
  *              schema:
  *                $ref: '#/components/schemas/User'
  *        401:
- *          description: Invalid username or password
+ *          description: Not authorized with admin role
+ *        403:
+ *          description: Forbidden
  */
  app.post('/adminlogin',async (req, res) => {
 	console.log("Request Body : ", req.body);
@@ -156,12 +161,12 @@ app.use(express.urlencoded({ extended: false }))
 			})
 		})
 		} else {
-			console.log("Not authorized with admin role");
-			res.status(401).json( {error : "Not authorized with admin role"} );
+			console.log("Forbidden");
+			res.status(403).json( {error : "Forbidden"} );
 		}
 	} else {
-		console.log("Admin Login Failed");
-		res.status(401).json( {error : "Admin Login Failed"} );
+		console.log("Not authorized with admin role");
+		res.status(401).json( {error : "Not authorized with admin role"} );
 	}
 })
 
@@ -191,7 +196,9 @@ app.use(express.urlencoded({ extended: false }))
  *              schema:
  *                $ref: '#/components/schemas/User'
  *        401:
- *          description: Invalid username or password
+ *          description: Not authorized with user role
+ *        403:
+ *          description: Forbidden
  */
 app.post('/userlogin',async (req, res) => {
 	console.log("Request Body : ", req.body);
@@ -211,12 +218,12 @@ app.post('/userlogin',async (req, res) => {
 			})
 		})
 		} else {
-			console.log("Not authorized with user role");
-			res.status(401).json( {error : "Not authorized with user role"} );
+			console.log("Forbidden");
+			res.status(403).json( {error : "Forbidden"} );
 		}
 	} else {
-		console.log("User Login Failed");
-		res.status(401).json( {error : "User Login Failed"} );
+		console.log("Not authorized with user role");
+		res.status(401).json( {error : "Not authorized with user role"} );
 	}
 })
 
@@ -246,11 +253,14 @@ app.post('/userlogin',async (req, res) => {
  *              schema:
  *                $ref: '#/components/schemas/User'
  *        401:
- *          description: Invalid username or password
+ *          description: Not authorized with security role
+ *        403:
+ *          description: Forbidden
  */
  app.post('/securitylogin',async (req, res) => {
 	console.log("Request Body : ", req.body);
 	const security = await User.login(req.body.username, req.body.password);
+	console.log(security)
 	if (security != null) {
 		if (security.role == "security") {
 		console.log("What is send to test : " + security._id, security.username, security.email);
@@ -261,17 +271,17 @@ app.post('/userlogin',async (req, res) => {
 			role: security.role,
 			token: generateAccessToken({
 				_id: security._id,
-				username: securityn.username,
+				username: security.username,
 				role: security.role
 			})
 		})
 		} else {
-			console.log("Not authorized with security role");
-			res.status(401).json( {error : "Not authorized with security role"} );
+			console.log("Forbidden");
+			res.status(403).json( {error : "Forbidden"} );
 		}
 	} else {
-		console.log("Security Login Failed");
-		res.status(401).json( {error : "Security Login Failed"} );
+		console.log("Not authorized with security role");
+		res.status(401).json( {error : "Not authorized with security role"} );
 	}
 })
 
@@ -296,7 +306,7 @@ app.post('/userlogin',async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Visitor'
- *       400:
+ *       404:
  *         description: Invalid ID
  */
 
@@ -319,7 +329,7 @@ app.use(verifyToken);
  * @swagger
  * /register:
  *   post:
- *      security: 
+ *      security:
  *          - BearerAuth: []
  *      summary: Register new user by Admin
  *      tags: [Admin Interface]
@@ -347,14 +357,18 @@ app.use(verifyToken);
  *              schema:
  *                $ref: '#/components/schemas/User'
  *        401:
- *          description: Invalid username or password
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        409:
+ *          description: Conflict with Duplicate username
  */
 app.post('/register', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "admin") {
 	const user = await User.register(req.body.username, req.body.password, req.body.email, req.body.role);
 	if (user != null ) {
-		console.log("Register Successfully");
+		console.log("User Register Successfully");
 		res.status(200).json({
 			_id: user._id,
 			username: user.username,
@@ -362,12 +376,12 @@ app.post('/register', async (req, res) => {
 			role: user.role,
 		})
 	} else {
-		console.log("Registered Failed");
-		res.status(401).json( {error : "Register Failed"} );
+		console.log("Conflict with Duplicate username");
+		res.status(409).json( {error : "Conflict with Duplicate username"} );
 	}
 	} else {
-		console.log("Register Failed");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -387,22 +401,26 @@ app.post('/register', async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Visitor'
- *       400:
- *         description: Not authorized with Admin role
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
  */
  app.get('/get', async (req, res) => {
 	if (req.user.role == "admin") {
-	const admin = await User.getAllVisitors();
+	const admin = await User.getAllUsers();
 	if (admin != null ) {
 		console.log("Get Successfully with", admin);
 		res.status(200).json({admin})
 	} else {
-		console.log("Get Failed");
+		console.log("Failed to get user");
 		res.status(404).send("Failed to get user");
 	}
 	} else {
 		console.log("Get Failed");
-		res.status(401).json( {error : "Not authorizaed with Admin role"} );
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -436,14 +454,18 @@ app.post('/register', async (req, res) => {
  *              schema:
  *                $ref: '#/components/schemas/User'
  *        401:
- *          description: Invalid username
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.patch('/update', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "admin") {
 	const user = await User.update(req.body.username, req.body.email, req.body.role);
 	if (user != null ) {
-		console.log("Register Successfully");
+		console.log("User Update Successfully");
 		res.status(200).json({
 			_id: user._id,
 			username: user.username,
@@ -451,12 +473,12 @@ app.post('/register', async (req, res) => {
 			role: user.role,
 		})
 	} else {
-		console.log("Updated Failed");
-		res.status(401).json( {error : "Updated Failed"} );
+		console.log("User not found");
+		res.status(404).json( {error : "User not found"} );
 	}
 	} else {
-		console.log("Updated Failed");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -480,24 +502,28 @@ app.post('/register', async (req, res) => {
  *                  type: string
  *      responses:
  *        200:  
- *          description: Delete Successfully
+ *          description: User Delete Successfully
  *        401:
- *          description: Invalid username 
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.delete('/delete', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "admin") {
 	const user = await User.delete(req.body.username);
 	if (user != null ) {
-		console.log("Delete Successfully");
-		res.status(200).json({ delete : "success"})
+		console.log("User Delete Successfully");
+		res.status(200).json({ delete : "User Delete Successfully"});
 	} else {
-		console.log("Delete Failed");
-		res.status(401).json( {error : "Delete Failed"} );
+		console.log("User not found");
+		res.status(404).json( {error : "User not found"} );
 	}
 	} else {
-		console.log("Delete Failed");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -517,8 +543,12 @@ app.post('/register', async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Visitor'
- *       400:
- *         description: Not authorized with Admin role
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Visitor Not Found
  */
  app.get('/getvisitor', async (req, res) => {
 	if (req.user.role == "admin") {
@@ -527,12 +557,12 @@ app.post('/register', async (req, res) => {
 		console.log("Get Successfully with", visitor);
 		res.status(200).json({visitor})
 	} else {
-		console.log("Get Failed");
-		res.status(404).send("Failed to get visitor");
+		console.log("Visitor not found");
+		res.status(404).send("Visitor not found");
 	}
 	} else {
-		console.log("Get Failed");
-		res.status(401).json( {error : "Not authorizaed with Admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -566,14 +596,18 @@ app.post('/register', async (req, res) => {
  *              schema:
  *                $ref: '#/components/schemas/Department'
  *        401:
- *          description: Invalid Department Code
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        409:
+ *          description: Conflict with Duplicate Department Code
  */
  app.post('/department/create', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "admin") {
 	const depart = await Departmental.createdepartment(req.body.code, req.body.department, req.body.floor);
 	if (depart != null ) {
-		console.log("Register Successfully");
+		console.log("Department Create Successfully");
 		res.status(200).json({
 			_id: depart._id,
 			code: depart.code,
@@ -581,12 +615,12 @@ app.post('/register', async (req, res) => {
 			floor: depart.floor
 		})
 	} else {
-		console.log("Create Department Failed");
-		res.status(401).json( {error : "Create Department Failed"} );
+		console.log("Conflict with Duplicate Department Code");
+		res.status(409).json( {error : "Conflict with Duplicate Department Code"} );
 	}
 	} else {
-		console.log("Not authorized with admin role");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -612,22 +646,26 @@ app.post('/register', async (req, res) => {
  *        200:  
  *          description: Department Deleted Successfully
  *        401:
- *          description: Invalid Department Code
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.delete('/department/delete', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "admin") {
-	const depart = await Department.deletedepartment(req.body.code);
+	const depart = await Departmental.deletedepartment(req.body.code);
 	if (depart != null ) {
 		console.log("Delete Successfully");
-		res.status(200).json({ delete : "success"})
+		res.status(200).json({ delete : "Department Delete Successfully"});
 	} else {
 		console.log("Delete Failed");
-		res.status(401).json( {error : "Delete Failed"} );
+		res.status(404).json( {error : "Department Not Found"} );
 	}
 	} else {
-		console.log("Delete Failed");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -647,22 +685,26 @@ app.post('/register', async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Department'
- *       400:
- *         description: Not authorized with Admin role
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Department Not Found
  */
  app.get('/department/get', async (req, res) => {
 	if (req.user.role == "admin") {
-	const admin = await Department.getdepartment();
+	const admin = await Departmental.getdepartment();
 	if (admin != null ) {
 		console.log("Get Successfully with", admin);
 		res.status(200).json({admin})
 	} else {
-		console.log("Get Departments Details Failed");
-		res.status(404).send("Get Departments Details Failed");
+		console.log("Department not found");
+		res.status(404).send("Department Not Found");
 	}
 	} else {
-		console.log("Not authorizaed with Admin role");
-		res.status(401).json( {error : "Not authorizaed with Admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -700,14 +742,18 @@ app.post('/register', async (req, res) => {
  *              schema:
  *                $ref: '#/components/schemas/Visitor'
  *        401:
- *          description: Create Visitor Failed
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        409:
+ *          description: Conflict with Duplicate ID
  */
  app.post('/visitor/create', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
 	const visitor = await Visitor.createVisitor(req.body.name, req.body.id, req.body.phone, req.user.username, req.body.date, req.body.checkin);
 	if (visitor != null ) {
-		console.log("Create Successfully");
+		console.log("Visitor Create Successfully");
 		console.log("What is send to test : " + visitor._id, visitor.name, visitor.id, visitor.phone, visitor.inputby, visitor.date, visitor.checkin);
 		res.status(200).json({
 			_id: visitor._id,
@@ -719,12 +765,12 @@ app.post('/register', async (req, res) => {
 			checkin: visitor.checkin
 		})
 	} else {
-		console.log("Register Failed");
-		res.status(401).json( {error : "Create Visitor Failed"} );
+		console.log("Conflict with Duplicate ID");
+		res.status(409).json( {error : "Conflict with Duplicate ID"} );
 	}
 	} else {
-		console.log("Register Failed");
-		res.status(401).json( {error : "Not authorized with user role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 }
 })
 
@@ -744,24 +790,27 @@ app.post('/register', async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Visitor'
- *       400:
- *         description: Invalid ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Visitor Not Found
  */
  app.get('/visitor/read', async (req, res) => {
 	if (req.user.role == "user") {
 	const username = req.user.username;
-	console.log("this is the username : " + username);
 	const visitor = await Visitor.UsergetVisitors(username);
 	if (visitor != null ) {
 		console.log("Get Successfully with", visitor);
 		res.status(200).json({visitor})
 	} else {
-		console.log("Get Failed");
-		res.status(404).send("Failed to get visitor");
+		console.log("Visitor not found");
+		res.status(404).send("Visitor Not Found");
 	}
 	} else {
-		console.log("Register Failed");
-		res.status(401).json( {error : "Not authorized with user role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -793,7 +842,11 @@ app.post('/register', async (req, res) => {
  *              schema:
  *                $ref: '#/components/schemas/Visitor'
  *        401:
- *          description: Update Visitor Failed
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.patch('/visitor/update', async (req, res) => {
 	console.log("Request Body : ", req.body);
@@ -813,12 +866,12 @@ app.post('/register', async (req, res) => {
 			checkout: visitor.checkout,
 		})
 	} else {
-		console.log("Update Failed");
-		res.status(401).json( {error : "Update Visitor Failed"} );
+		console.log("Visitor Not Found");
+		res.status(404).json( {error : "Visitor Not Found"} );
 	}
 	} else {
-		console.log("Update Failed");
-		res.status(401).json( {error : "Not authorized with user role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 }
 })
 
@@ -844,10 +897,15 @@ app.post('/register', async (req, res) => {
  *        200:  
  *          description: Delete Visitor Successfully
  *        401:
- *          description: Delete Visitor Failed
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.delete('/visitor/delete', async (req, res) => {
 	console.log("Request Body : ", req.body);
+	if (req.user.role == "admin") {
 	const visitor = await Visitor.deleteVisitor(req.body.id, req.user.username);
 	if (visitor != null ) {
 		console.log("Delete Successfully");
@@ -855,8 +913,12 @@ app.post('/register', async (req, res) => {
 		console.log("User Deleted");
 		res.status(200).json({ delete : "success"})
 	} else {
-		console.log("Delete Failed");
-		res.status(404).json( {error : "Delete Failed"} );
+		console.log("Visitor Not Found");
+		res.status(404).json( {error : "Visitor Not Found"} );
+	}
+	} else {
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -882,20 +944,24 @@ app.post('/register', async (req, res) => {
  *                  type: string
  *      responses:
  *        200:  
- *          description: Update Successfully
+ *          description: Visitor ID insert Successfully
  *          content:
  *            application/json:
  *              schema:
  *                $ref: '#/components/schemas/Department'
  *        401:
- *          description: Invalid username
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.patch('/department/insert', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
-	const user = await Department.updatedepartmentid(req.body.code, req.body.visitors);
+	const user = await Departmental.updatedepartmentid(req.body.code, req.body.visitors);
 	if (user != null ) {
-		console.log("Register Successfully");
+		console.log("Visitor ID insert Successfully");
 		res.status(200).json({
 			_id: user._id,
 			code: user.code,
@@ -904,12 +970,12 @@ app.post('/register', async (req, res) => {
 			visitors: user.visitors
 		})
 	} else {
-		console.log("Insert visitor id Failed");
-		res.status(401).json( {error : "Insert visitor id Failed"} );
+		console.log("Department Not Found");
+		res.status(404).json( {error : "Department Not Found"} );
 	}
 	} else {
-		console.log("Not authorized with admin role");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -935,20 +1001,24 @@ app.post('/register', async (req, res) => {
  *                  type: string
  *      responses:
  *        200:  
- *          description: Update Successfully
+ *          description: Visitor ID remove Successfully
  *          content:
  *            application/json:
  *              schema:
  *                $ref: '#/components/schemas/Department'
  *        401:
- *          description: Invalid username
+ *          description: Unauthorized
+ *        403:
+ *          description: Forbidden
+ *        404:
+ *          description: Not Found
  */
  app.patch('/department/remove', async (req, res) => {
 	console.log("Request Body : ", req.body);
 	if (req.user.role == "user") {
-	const user = await Department.deletedepartmentid(req.body.code, req.body.visitors);
+	const user = await Departmental.deletedepartmentid(req.body.code, req.body.visitors);
 	if (user != null ) {
-		console.log("Register Successfully");
+		console.log("Visitor ID remove Successfully");
 		res.status(200).json({
 			_id: user._id,
 			code: user.code,
@@ -957,12 +1027,12 @@ app.post('/register', async (req, res) => {
 			visitors: user.visitors
 		})
 	} else {
-		console.log("Remove visitor id Failed");
-		res.status(401).json( {error : "Remove visitor id Failed"} );
+		console.log("Department Not Found");
+		res.status(404).json( {error : "Department Not Found"} );
 	}
 	} else {
-		console.log("Not authorized with admin role");
-		res.status(401).json( {error : "Not authorized with admin role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 
@@ -982,8 +1052,12 @@ app.post('/register', async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Visitor'
- *       400:
- *         description: Not authorizaed with Admin role
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
  */
  app.get('/security', async (req, res) => {
 	if (req.user.role == "security") {
@@ -992,12 +1066,12 @@ app.post('/register', async (req, res) => {
 		console.log("Get Successfully with", visitor);
 		res.status(200).json({visitor})
 	} else {
-		console.log("Get Failed");
-		res.status(404).send("Failed to get visitor");
+		console.log("Visitor Not Found");
+		res.status(404).send("Visitor Not Found");
 	}
 	} else {
-		console.log("Register Failed");
-		res.status(401).json( {error : "Not authorizaed with Security role"} );
+		console.log("Forbidden");
+		res.status(403).json( {error : "Forbidden"} );
 	}
 })
 

@@ -62,27 +62,6 @@ class Departmental {
 			return null;
 		}
 	}
-
-	// static async UsergetVisitors(inputby) {
-	// 	let visitor = await visitors.find({ "inputby": inputby }).toArray();
-	// 	if(visitor){
-	// 		return visitor;
-	// 	}
-	// 	else {
-	// 		return null
-	// 	}
-	// }
-
-	// static async getAllVisitors() {
-    //     let visitor = await visitors.find({ }).toArray();
-	// 	console.log("this is what i get", visitor);
-    //     if(visitor){
-    //         return visitor;
-    //     }
-    //     else {
-    //         return null
-    //     }
-	// }
 }
 
 module.exports = Departmental;

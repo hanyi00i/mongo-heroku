@@ -8,7 +8,7 @@ class Visitor {
 
 	static async getVisitor(id) {
         let visitor = await visitors.findOne({ "id": id });
-        if(visitor){
+        if(visitor) {
             return visitors.find({"id": id}).toArray();
         }
         else {
