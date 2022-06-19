@@ -1083,7 +1083,7 @@ app.post('/register', async (req, res) => {
  *         - BearerAuth: []
  *     summary: Data analytics that can be generated from the database through the RESTful API
  *     tags: [Data Analytics for Admin Only]
- *     description: Data analytics of the department that will have visitors before 11:00 AM
+ *     description: Data analytics of the department that will have visitors before 11:00 AM so that the department's operating hour may adjust earlier
  *     responses:
  *       200:
  *         description: The department that will have visitors before 11:00 AM
@@ -1113,14 +1113,14 @@ app.post('/register', async (req, res) => {
 //***********************************************************************************************/
 
 app.listen(port, () => {
-	console.log(`Example app listening on port ${port}`)
+	console.log(`VMS of Group 10 S2 app listening on port ${port}`)
 })
 
 // JSON Web Token
 const jwt = require('jsonwebtoken');
 const Department = require("./department");
 function generateAccessToken(payload) {
-	return jwt.sign(payload, "my-super-secret", { expiresIn: '1d' }); //expiresIn: '60s'
+	return jwt.sign(payload, "group10-secret-s2", { expiresIn: '1h' }); // expires in 1 hour
 }
 
 function verifyToken(req, res, next) {
@@ -1129,7 +1129,7 @@ function verifyToken(req, res, next) {
 
 	if (token == null) return res.sendStatus(401)
 
-	jwt.verify(token, "my-super-secret", (err, user) => {
+	jwt.verify(token, "group10-secret-s2", (err, user) => {
 		console.log(err)
 		if (err) return res.sendStatus(403)
 		req.user = user
