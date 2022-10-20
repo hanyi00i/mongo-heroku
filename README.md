@@ -22,6 +22,8 @@ The diagram below show the Entity Relationship Diagram that contains the Databas
 ## Heroku link that Host the RESTful API on the cloud
 https://tranquil-beach-83069.herokuapp.com/api-docs/
 
+![tranquil-beach-83069](https://github.com/hanyi00i/mongo-heroku/blob/master/tranquil-beach-83069.png)
+
 ## Deploying Node.js Apps to Heroku with Swagger
 
 Heroku Connection that accompanies the
