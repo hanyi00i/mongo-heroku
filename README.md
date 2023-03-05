@@ -5,7 +5,7 @@ Visitor Management System in Hospital
 ## Use-Case Diagram
 
 The diagram below show the Use-Case diagram for this Hospital VMS.
-![Use-Case Diagram](https://github.com/OoiHanYi/assignment/blob/master/Diagram/Use-Case%20Diagram.png)
+![Use-Case Diagram](https://github.com/hanyi00i/mongo-heroku/blob/master/Img/Use-Case%20Diagram.drawio.png)
 
 - There are four character in this Use-Case Diagram.
 - 🧑‍⚕️ Admin can do the CRUD operation for the role of admin, user, and security. Admin also can view all the visitor's information and department's details.
@@ -16,7 +16,7 @@ The diagram below show the Use-Case diagram for this Hospital VMS.
 ## Entity Relationship Diagram
 
 The diagram below show the Entity Relationship Diagram that contains the Database Modelling with Crow’s Foot Notation.
-![Entity Relationship Diagram](https://github.com/hanyi00i/mongo-heroku/blob/master/Img/Use-Case%20Diagram.drawio.png)
+![Entity Relationship Diagram](https://github.com/hanyi00i/mongo-heroku/blob/master/Img/Entity%20Relationship%20Diagram.drawio.png)
 
 - There are total three collections named User, Visitor, and Department in the database named vms.
 - The Visitor collection has a key field named inputby will contained the username of the User collection.
